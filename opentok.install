@@ -1,6 +1,6 @@
 <?php
 
-function opentok_schema(){
+function opentok_schema() {
   $schema['opentok_connection'] = array(
     'fields' => array(
       'connection_id' => array(
@@ -8,7 +8,7 @@ function opentok_schema(){
         'length' => '64',
         'not null' => TRUE,
       ),
-  		'uid' => array(
+      'uid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -25,7 +25,7 @@ function opentok_schema(){
         'table' => 'users',
         'columns' => array('uid' => 'uid'),
       ),
-    ), 
+    ),
     'primary key' => array('connection_id'),
   );
   return $schema;

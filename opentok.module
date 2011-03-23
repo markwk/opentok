@@ -7,7 +7,7 @@ define('OPENTOK_PRODUCTION_SERVER', 'https://api.opentok.com/hl');
 define('OPENTOK_STAGING_JS', 'http://staging.tokbox.com/v0.91/js/TB.min.js');
 define('OPENTOK_PRODUCTION_JS', 'http://static.opentok.com/v0.91/js/TB.min.js');
 
-function opentok_menu(){
+function opentok_menu() {
   $items = array();
 
   $items['admin/config/media/opentok'] = array(
@@ -18,13 +18,13 @@ function opentok_menu(){
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
   );
-  
+
   $items['opentok/stream-wrapper'] = array(
     'page callback' => 'opentok_stream_wrapper_js',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['opentok/register'] = array(
     'page callback' => 'opentok_register_js',
     'access arguments' => array('access content'),
@@ -34,7 +34,7 @@ function opentok_menu(){
   return $items;
 }
 
-function opentok_config_form($form, &$form_state){
+function opentok_config_form($form, &$form_state) {
   $form['opentok_api_key'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('opentok_api_key', ''),
@@ -59,8 +59,8 @@ function opentok_config_form($form, &$form_state){
 }
 
 function opentok_config_form_validate($form, &$form_state) {
-	$form_state['values']['opentok_api_key'] = trim($form_state['values']['opentok_api_key']);
-	$form_state['values']['opentok_api_secret'] = trim($form_state['values']['opentok_api_secret']);
+  $form_state['values']['opentok_api_key'] = trim($form_state['values']['opentok_api_key']);
+  $form_state['values']['opentok_api_secret'] = trim($form_state['values']['opentok_api_secret']);
 }
 
 function opentok_field_info() {
@@ -77,35 +77,35 @@ function opentok_field_info() {
   );
 }
 
-function opentok_field_instance_settings_form($field, $instance){
-  if($field['type'] == 'opentok'){
+function opentok_field_instance_settings_form($field, $instance) {
+  if ($field['type'] == 'opentok') {
     $settings = $instance['settings'];
     $form['author_role'] = array(
       '#type' => 'select',
       '#title' => t('OpenTok Session role for author'),
       '#options' => array(
-  			'subscriber' => t('Subscriber'),
-  			'publisher' => t('Publisher'),
-  			'moderator' => t('Moderator'),
-  		),
-  		'#default_value' => $settings['author_role'],
-  		'#required' => FALSE,
+        'subscriber' => t('Subscriber'),
+        'publisher' => t('Publisher'),
+        'moderator' => t('Moderator'),
+      ),
+      '#default_value' => $settings['author_role'],
+      '#required' => FALSE,
     );
     return $form;
   }
 }
 
-function opentok_field_schema($field){
-  if($field['type'] == 'opentok'){
+function opentok_field_schema($field) {
+  if ($field['type'] == 'opentok') {
     $schema['columns'] = array(
       'api_key' => array(
         'type' => 'varchar',
         'length' => 32,
       ),
       'api_staging' => array(
-        'type' => 'int', 
+        'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE, 
+        'not null' => TRUE,
         'default' => 0,
       ),
       'session_id' => array(
@@ -128,7 +128,7 @@ function opentok_field_schema($field){
   return $schema;
 }
 
-function opentok_field_is_empty($item, $field){
+function opentok_field_is_empty($item, $field) {
   return FALSE;
 }
 
@@ -164,33 +164,33 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
       '#type' => 'checkbox',
       '#default_value' => isset($items[$delta]['autoconnect']) ? $items[$delta]['autoconnect'] : FALSE,
       '#title' => t('Auto-connect OpenTok session'),
-    	'#disabled' => TRUE,
-    	'#description' => 'NOT YET IMPLEMENTED',
+      '#disabled' => TRUE,
+      '#description' => 'NOT YET IMPLEMENTED',
     ) + $base;
-    
+
     $element['roles'] = array(
-    	'#type' => 'fieldset',
-    	'#title' => t('Session Roles'),
-    	'#tree' => TRUE, 
+      '#type' => 'fieldset',
+      '#title' => t('Session Roles'),
+      '#tree' => TRUE,
     ) + $base;
     $roles = user_roles();
-    foreach($roles as $role_id => $role_name){
-    	$element['roles'][$role_id] = array(
-    		'#type' => 'select',
-    		'#title' => t("OpenTok role for '!role'", array('!role' => $role_name)),
-    		'#options' => array(
-    			'subscriber' => t('Subscriber'),
-    			'publisher' => t('Publisher'),
-    			'moderator' => t('Moderator'),
-    		),
-    		'#default_value' => isset($items[$delta]['roles'][$role_id]) ? $items[$delta]['roles'][$role_id] : 'subscriber', 
-    	) + $base;
+    foreach ($roles as $role_id => $role_name) {
+      $element['roles'][$role_id] = array(
+        '#type' => 'select',
+        '#title' => t("OpenTok role for '!role'", array('!role' => $role_name)),
+        '#options' => array(
+          'subscriber' => t('Subscriber'),
+          'publisher' => t('Publisher'),
+          'moderator' => t('Moderator'),
+        ),
+        '#default_value' => isset($items[$delta]['roles'][$role_id]) ? $items[$delta]['roles'][$role_id] : 'subscriber',
+      ) + $base;
     }
   }
   return $element;
 }
 
-function opentok_field_formatter_info(){
+function opentok_field_formatter_info() {
   return array(
     'opentok_default' => array(
       'label' => t('Default'),
@@ -199,23 +199,23 @@ function opentok_field_formatter_info(){
   );
 }
 
-function opentok_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display){
+function opentok_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
   global $user;
   $element = array();
   $settings = $display['settings'];
-  
+
   $api_staging = variable_get('opentok_staging', FALSE);
   $api_key = variable_get('opentok_api_key', NULL);
   $api_js = $api_staging ? OPENTOK_STAGING_JS : OPENTOK_PRODUCTION_JS;
 
-  switch($display['type']){
+  switch ($display['type']) {
     case 'opentok_default':
       $entity_ids = entity_extract_ids($obj_type, $object);
-      foreach($items as $delta => $item){
-        if($item['api_key'] == $api_key && $item['api_staging'] == $api_staging){
+      foreach ($items as $delta => $item) {
+        if ($item['api_key'] == $api_key && $item['api_staging'] == $api_staging) {
           $item_id = "{$obj_type}-{$field['field_name']}-{$entity_ids[0]}-{$delta}";
           $role = opentok_user_role($item['roles']);
-          if($object->uid == $user->uid){
+          if ($object->uid == $user->uid) {
             $role = opentok_highest_role(array($role, $instance['settings']['author_role']));
           }
           $element[$delta] = array(
@@ -243,7 +243,7 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
           );
         }
       }
-      if(!empty($element)){
+      if (!empty($element)) {
         $element['#attached']['js'] = array(
           drupal_get_path('module', 'opentok') . '/jquery.opentok.js',
           drupal_get_path('module', 'opentok') . '/json2.js',
@@ -255,63 +255,63 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
   return $element;
 }
 
-function opentok_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items){
-  if($field['type'] == 'opentok'){
+function opentok_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  if ($field['type'] == 'opentok') {
     $api_key = variable_get('opentok_api_key', NULL);
     $api_staging = variable_get('opentok_staging', FALSE);
-    
-    foreach($items as $delta => $item){
-      if(empty($item['autoconnect'])){
+
+    foreach ($items as $delta => $item) {
+      if (empty($item['autoconnect'])) {
         $items[$delta]['autoconnect'] = 0;
       }
-      if(empty($item['session_id']) || $item['api_key'] != $api_key || $item['api_staging'] != $api_staging){
+      if (empty($item['session_id']) || $item['api_key'] != $api_key || $item['api_staging'] != $api_staging) {
         $items[$delta]['api_key'] = $api_key;
         $items[$delta]['api_staging'] = $api_staging;
         $items[$delta]['session_id'] = opentok_create_session(ip_address());
       }
-      if(!empty($item['roles'])){
+      if (!empty($item['roles'])) {
         $items[$delta]['roles'] = serialize((array)$item['roles']);
       }
     }
   }
 }
 
-function opentok_field_load($entity_type, $entities, $field, $instance, $langcode, &$items, $age){
+function opentok_field_load($entity_type, $entities, $field, $instance, $langcode, &$items, $age) {
   foreach ($entities as $id => $entity) {
     foreach ($items[$id] as $delta => $item) {
-      if(!empty($item['roles'])){
+      if (!empty($item['roles'])) {
         $items[$id][$delta]['roles'] = unserialize($item['roles']);
       }
     }
   }
 }
 
-function opentok_get_token_js($session_id){
-	$token = array('connectionToken' => opentok_get_token($session_id));
-	return drupal_json_output($token);
+function opentok_get_token_js($session_id) {
+  $token = array('connectionToken' => opentok_get_token($session_id));
+  return drupal_json_output($token);
 }
 
-function opentok_get_token($session_id, $role = '', $expire_time = NULL){
-	if(false){
-		// TODO: Try to get session from database using OT SessionID.
-	}
-	else{
-		return opentok_generate_token($session_id, $role, $expire_time);
-	}
+function opentok_get_token($session_id, $role = '', $expire_time = NULL) {
+  if (false) {
+    // TODO: Try to get session from database using OT SessionID.
+  }
+  else{
+    return opentok_generate_token($session_id, $role, $expire_time);
+  }
 }
 
-function opentok_create_session($location, $properties = array()){
+function opentok_create_session($location, $properties = array()) {
   $properties['location'] = $location;
-  
+
   $create_session_result = _opentok_do_request("/session/create", $properties);
   $create_session_XML = simplexml_load_string($create_session_result, 'SimpleXMLElement', LIBXML_NOCDATA);
-  
+
   //TODO: check for errors
 
   return $create_session_XML->Session->session_id;
 }
 
-function _opentok_do_request($url, $data){
+function _opentok_do_request($url, $data) {
   $api_key = variable_get('opentok_api_key', NULL);
   $api_secret = variable_get('opentok_api_secret', NULL);
   $api_staging = variable_get('opentok_staging', FALSE);
@@ -320,7 +320,7 @@ function _opentok_do_request($url, $data){
 
   $url = $api_server . $url;
 
-  if(is_array($data)){
+  if (is_array($data)) {
     $data['api_key'] = $api_key;
     $data = drupal_http_build_query($data);
   }
@@ -336,20 +336,20 @@ function _opentok_do_request($url, $data){
   return $response->data;
 }
 
-function opentok_generate_token($session_id = '', $role = '', $expire_time = NULL){
+function opentok_generate_token($session_id = '', $role = '', $expire_time = NULL) {
   $api_key = variable_get('opentok_api_key', '');
   $api_secret = variable_get('opentok_api_secret', '');
-	$create_time = time();
+  $create_time = time();
 
   $nonce = microtime(true) . mt_rand();
 
   $data = array(
-  	'session_id' => $session_id,
-  	'create_time' => $create_time,
-  	'role' => $role,
-  	'nonce' => $nonce,
+    'session_id' => $session_id,
+    'create_time' => $create_time,
+    'role' => $role,
+    'nonce' => $nonce,
   );
-  if(!is_null($expire_time))
+  if (!is_null($expire_time))
     $data['expire_time'] = $expire_time;
 
   $data_string = drupal_http_build_query($data);
@@ -357,16 +357,16 @@ function opentok_generate_token($session_id = '', $role = '', $expire_time = NUL
   $sdk_version = OPENTOK_SDK_VERSION;
 
   $token_data = array(
-  	'partner_id' => $api_key,
-  	'sdk_version' => $sdk_version,
-  	'sig' => $sig,
+    'partner_id' => $api_key,
+    'sdk_version' => $sdk_version,
+    'sig' => $sig,
   );
   $token_data_string = drupal_http_build_query($token_data);
-  
+
   return OPENTOK_TOKEN_SENTINEL . base64_encode("{$token_data_string}:{$data_string}");
 }
 
-function opentok_user_role($role_map, $account = NULL){
+function opentok_user_role($role_map, $account = NULL) {
   global $user;
 
   if (!isset($account)) {
@@ -374,40 +374,40 @@ function opentok_user_role($role_map, $account = NULL){
   }
 
   $roles = array_intersect_key($role_map, $account->roles);
-  
+
   return opentok_highest_role($roles);
 }
 
-function opentok_highest_role($roles_list){
+function opentok_highest_role($roles_list) {
   $roles = array_values(
     array_intersect(
       array('moderator', 'publisher', 'subscriber'),
       $roles_list
     )
   );
-  
+
   return !empty($roles) ? $roles[0] : '';
 }
 
-function opentok_stream_wrapper_js(){
+function opentok_stream_wrapper_js() {
   $opentok_session = drupal_json_decode($_REQUEST['opentok_session']);
   $opentok_stream = drupal_json_decode($_REQUEST['opentok_stream']);
   echo theme('opentok_stream', array('session' => $opentok_session, 'stream' => $opentok_stream));
 }
 
-function opentok_register_js(){
+function opentok_register_js() {
   global $user;
-  if($user->uid && $opentok_connection = drupal_json_decode($_REQUEST['opentok_connection'])){
+  if ($user->uid && $opentok_connection = drupal_json_decode($_REQUEST['opentok_connection'])) {
     db_insert('opentok_connection')
     ->fields(array(
       'connection_id' => $opentok_connection['connectionId'],
-    	'uid' => $user->uid,
+      'uid' => $user->uid,
       'creation_time' => substr($opentok_connection['creationTime'], 0, 10),
     ))->execute();
   }
 }
 
-function opentok_get_connection_uid($connection_id){
+function opentok_get_connection_uid($connection_id) {
   return db_select('opentok_connection', 'otc')
     ->condition('connection_id', $connection_id)
     ->fields('otc', array('uid'))
@@ -415,7 +415,7 @@ function opentok_get_connection_uid($connection_id){
     ->fetchField(0);
 }
 
-function opentok_theme($existing, $type, $theme, $path){
+function opentok_theme($existing, $type, $theme, $path) {
   return array(
     'opentok_container' => array(
       'variables' => array('element' => NULL),
@@ -442,24 +442,24 @@ function opentok_theme($existing, $type, $theme, $path){
       'variables' => array('element' => NULL),
     ),
     'opentok_mute' => array(
-    	'variables' => array('session' => NULL, 'stream' => NULL),
+      'variables' => array('session' => NULL, 'stream' => NULL),
     ),
     'opentok_unmute' => array(
-    	'variables' => array('session' => NULL, 'stream' => NULL),
+      'variables' => array('session' => NULL, 'stream' => NULL),
     ),
     'opentok_close' => array(
-    	'variables' => array('session' => NULL, 'stream' => NULL),
+      'variables' => array('session' => NULL, 'stream' => NULL),
     ),
     'opentok_force_unpublish' => array(
-    	'variables' => array('session' => NULL, 'stream' => NULL),
+      'variables' => array('session' => NULL, 'stream' => NULL),
     ),
     'opentok_force_disconnect' => array(
-    	'variables' => array('session' => NULL, 'stream' => NULL),
+      'variables' => array('session' => NULL, 'stream' => NULL),
     ),
   );
 }
 
-function theme_opentok_container($element){
+function theme_opentok_container($element) {
   $output = "<div id='{$element['id']}' class='opentok-container'>";
   $output .= theme('opentok_connect');
   $output .= theme('opentok_disconnect');
@@ -473,67 +473,67 @@ function theme_opentok_container($element){
 
 // all of these will probably be accessed through ajax calls
 
-function theme_opentok_publisher($element){
-  
+function theme_opentok_publisher($element) {
+
 }
 
-function theme_opentok_stream($variables){
+function theme_opentok_stream($variables) {
   $output = '<div class="opentok-stream">';
   //$output .= print_r($variables, TRUE);
-  if($stream_uid = opentok_get_connection_uid($variables['stream']['connection']['connectionId'])){
+  if ($stream_uid = opentok_get_connection_uid($variables['stream']['connection']['connectionId'])) {
     $stream_user = user_load($stream_uid);
     $output .= theme('username', array('account' => $stream_user));
   }
   $output .= theme('opentok_mute', $variables);
   $output .= theme('opentok_unmute', $variables);
   $output .= theme('opentok_close', $variables);
-  if($variables['session']['capabilities']['forceDisconnect']){
+  if ($variables['session']['capabilities']['forceDisconnect']) {
     $output .= theme('opentok_force_unpublish', $variables);
   }
-  if($variables['session']['capabilities']['forceUnpublish']){
+  if ($variables['session']['capabilities']['forceUnpublish']) {
     $output .= theme('opentok_force_disconnect', $variables);
   }
-  $output .= '</div>';  
+  $output .= '</div>';
   return $output;
 }
 
-function theme_opentok_mute($variables){
+function theme_opentok_mute($variables) {
   return l(t('Mute'), '', array('attributes' => array('class' => 'opentok-mute')));
 }
 
-function theme_opentok_unmute($variables){
+function theme_opentok_unmute($variables) {
   return l(t('Unmute'), '', array('attributes' => array('class' => 'opentok-unmute')));
 }
 
-function theme_opentok_close($variables){
+function theme_opentok_close($variables) {
   return l(t('Close'), '', array('attributes' => array('class' => 'opentok-close')));
 }
 
-function theme_opentok_force_unpublish($variables){
+function theme_opentok_force_unpublish($variables) {
   return l(t('Unpublish'), '', array('attributes' => array('class' => 'opentok-force-unpublish')));
 }
 
-function theme_opentok_force_disconnect($variables){
+function theme_opentok_force_disconnect($variables) {
   return l(t('Disconnect'), '', array('attributes' => array('class' => 'opentok-force-disconnect')));
 }
 
-function theme_opentok_subscriber($element){
-  
+function theme_opentok_subscriber($element) {
+
 }
 
-function theme_opentok_connect($element){
+function theme_opentok_connect($element) {
   return l(t('Connect'), '', array('attributes' => array('class' => 'opentok-connect')));
 }
 
-function theme_opentok_disconnect($element){
+function theme_opentok_disconnect($element) {
   return l(t('Disconnect'), '', array('attributes' => array('class' => 'opentok-disconnect')));
 }
 
-function theme_opentok_publish($element){
+function theme_opentok_publish($element) {
   return l(t('Publish'), '', array('attributes' => array('class' => 'opentok-publish')));
 }
 
-function theme_opentok_unpublish($element){
+function theme_opentok_unpublish($element) {
   /*return array(
     '#title' => t('Unpublish'),
     '#href' => '',
