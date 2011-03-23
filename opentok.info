@@ -1,0 +1,5 @@
+name = OpenTok
+description = OpenTok
+core = 7.x
+configure = admin/config/media/opentok
+files[] = opentok.module

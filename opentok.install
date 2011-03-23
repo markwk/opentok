@@ -1,0 +1,32 @@
+<?php
+
+function opentok_schema(){
+  $schema['opentok_connection'] = array(
+    'fields' => array(
+      'connection_id' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+      ),
+  		'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'creation_time' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ), 
+    'primary key' => array('connection_id'),
+  );
+  return $schema;
+}
