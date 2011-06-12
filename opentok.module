@@ -70,6 +70,7 @@ function opentok_field_info() {
       'description' => t('This field stores an OpenTok session.'),
       'instance_settings' => array(
         'author_role' => 'moderator',
+        'regenerate_session' => false,
       ),
       'default_widget' => 'opentok_default',
       'default_formatter' => 'opentok_default',
@@ -90,6 +91,11 @@ function opentok_field_instance_settings_form($field, $instance) {
       ),
       '#default_value' => $settings['author_role'],
       '#required' => FALSE,
+    );
+    $form['regenerate_session'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Regenerate session on node save'),
+      '#default_value' => $settings['regenerate_session'],
     );
     return $form;
   }
@@ -112,7 +118,19 @@ function opentok_field_schema($field) {
         'type' => 'varchar',
         'length' => 128,
       ),
-      'autoconnect' => array(
+      'auto_connect' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'auto_publish' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'push_talk' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -151,28 +169,42 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
     $element['api_key'] = array(
       '#type' => 'value',
       '#default_value' => isset($items[$delta]['session_id']) ? $items[$delta]['api_key'] : NULL,
-    ) + $base;
+    );
     $element['api_staging'] = array(
       '#type' => 'value',
       '#default_value' => isset($items[$delta]['api_staging']) ? $items[$delta]['api_staging'] : NULL,
-    ) + $base;
+    );
     $element['session_id'] = array(
       '#type' => 'value',
       '#default_value' => isset($items[$delta]['session_id']) ? $items[$delta]['session_id'] : NULL,
-    ) + $base;
-    $element['autoconnect'] = array(
+    );
+  	if(isset($items[$delta]['session_id'])){
+      $element['regenerate_session'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Regenerate OpenTok session'),
+        '#default_value' => $instance['settings']['regenerate_session'],
+      ) + $base;
+    } 
+    $element['auto_connect'] = array(
+  		'#type' => 'checkbox',
+      '#default_value' => isset($items[$delta]['auto_connect']) ? $items[$delta]['auto_connect'] : FALSE,
+      '#title' => t('Auto-connect to OpenTok session'),
+    );
+    $element['auto_publish'] = array(
       '#type' => 'checkbox',
-      '#default_value' => isset($items[$delta]['autoconnect']) ? $items[$delta]['autoconnect'] : FALSE,
-      '#title' => t('Auto-connect OpenTok session'),
-      '#disabled' => TRUE,
-      '#description' => 'NOT YET IMPLEMENTED',
-    ) + $base;
-
+      '#default_value' => isset($items[$delta]['auto_publish']) ? $items[$delta]['auto_publish'] : FALSE,
+      '#title' => t('Auto-publish to OpenTok session'),
+    );
+    $element['push_talk'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => isset($items[$delta]['push_talk']) ? $items[$delta]['push_talk'] : FALSE,
+      '#title' => t('Enable Push To Talk'),
+    );
     $element['roles'] = array(
       '#type' => 'fieldset',
       '#title' => t('Session Roles'),
       '#tree' => TRUE,
-    ) + $base;
+    );
     $roles = user_roles();
     foreach ($roles as $role_id => $role_name) {
       $element['roles'][$role_id] = array(
@@ -184,8 +216,11 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
           'moderator' => t('Moderator'),
         ),
         '#default_value' => isset($items[$delta]['roles'][$role_id]) ? $items[$delta]['roles'][$role_id] : 'subscriber',
-      ) + $base;
+      );
     }
+    $element['#tree'] = TRUE;
+  	$element['#type'] = 'fieldset';
+  	$element = $element + $base;
   }
   return $element;
 }
@@ -233,6 +268,9 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
                         'sessionId' => $item['session_id'],
                         'apiKey' => $api_key,
                         'connectionToken' => opentok_get_token($item['session_id'], $role),
+                        'autoConnect' => (bool)$item['auto_connect'],
+                        'autoPublish' => (bool)$item['auto_publish'],
+                        'pushTalk' => (bool)$item['push_talk'],
                       ),
                     ),
                   ),
@@ -244,11 +282,25 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
         }
       }
       if (!empty($element)) {
-        $element['#attached']['js'] = array(
-          drupal_get_path('module', 'opentok') . '/jquery.opentok.js',
-          drupal_get_path('module', 'opentok') . '/json2.js',
-          drupal_get_path('module', 'opentok') . '/opentok.js',
+        $jquery_resize_path = libraries_get_path('jquery-resize');
+        $jquery_opentok_path = libraries_get_path('jquery-opentok');
+        $json_js_path = libraries_get_path('json-js');
+        $opentok_path = drupal_get_path('module', 'opentok');
+        $element['#attached'] = array(
+          'js' => array(
+            $jquery_resize_path . '/jquery.ba-resize.js',
+            $jquery_opentok_path . '/jquery.opentok.js',
+      	    $jquery_opentok_path . '/jquery.opentok.layout.js',
+      			$json_js_path . '/json2.js',
+            $opentok_path . '/opentok.js',
+          ),
+          'css' => array(
+            $jquery_opentok_path . '/jquery.opentok.css',
+            $jquery_opentok_path . '/jquery.opentok.layout.css',
+            $opentok_path . '/opentok.css',
+          ),
         );
+
       }
     break;
   }
@@ -264,7 +316,7 @@ function opentok_field_presave($entity_type, $entity, $field, $instance, $langco
       if (empty($item['autoconnect'])) {
         $items[$delta]['autoconnect'] = 0;
       }
-      if (empty($item['session_id']) || $item['api_key'] != $api_key || $item['api_staging'] != $api_staging) {
+      if (empty($item['session_id']) || $item['regenerate_session'] || $item['api_key'] != $api_key || $item['api_staging'] != $api_staging) {
         $items[$delta]['api_key'] = $api_key;
         $items[$delta]['api_staging'] = $api_staging;
         $items[$delta]['session_id'] = opentok_create_session(ip_address());
@@ -441,6 +493,12 @@ function opentok_theme($existing, $type, $theme, $path) {
     'opentok_unpublish' => array(
       'variables' => array('element' => NULL),
     ),
+    'opentok_push_talk_mode' => array(
+      'variables' => array('element' => NULL),
+    ),
+    'opentok_push_talk_toggle' => array(
+      'variables' => array('element' => NULL),
+    ),
     'opentok_mute' => array(
       'variables' => array('session' => NULL, 'stream' => NULL),
     ),
@@ -456,18 +514,29 @@ function opentok_theme($existing, $type, $theme, $path) {
     'opentok_force_disconnect' => array(
       'variables' => array('session' => NULL, 'stream' => NULL),
     ),
+    'opentok_snapshot_publisher' => array(
+      'variables' => array('element' => NULL),
+    ),
+    'opentok_snapshot_stream' => array(
+      'variables' => array('element' => NULL),
+    ),
   );
 }
 
 function theme_opentok_container($element) {
-  $output = "<div id='{$element['id']}' class='opentok-container'>";
-  $output .= theme('opentok_connect');
-  $output .= theme('opentok_disconnect');
-  $output .= theme('opentok_publish');
-  $output .= theme('opentok_unpublish');
-  $output .= '<div class="opentok-publisher"></div>';
-  $output .= '<div class="opentok-streams"></div>';
-  $output .= '</div>';
+  global $user;
+	$output = "<div id='{$element['id']}' class='opentok-container'><div class='opentok-controls'>";
+	$output .= theme('opentok_connect', $element);
+  $output .= theme('opentok_disconnect', $element);
+  $output .= theme('opentok_publish', $element);
+  $output .= '</div><div class="opentok-streams clear-block"><div class="opentok-publisher-wrapper">';
+  $output .= '<div class="opentok-username">' . theme('username', array('account' => $user)) . '</div>';
+  $output .= '<div class="opentok-publisher-controls">';
+  $output .= theme('opentok_push_talk_mode', $element);
+  $output .= theme('opentok_push_talk_toggle', $element);
+  $output .= theme('opentok_snapshot_publisher', $element);
+  $output .= theme('opentok_unpublish', $element);
+  $output .= '</div><div class="opentok-publisher"></div></div></div></div>';
   return $output;
 }
 
@@ -478,21 +547,24 @@ function theme_opentok_publisher($element) {
 }
 
 function theme_opentok_stream($variables) {
-  $output = '<div class="opentok-stream">';
-  //$output .= print_r($variables, TRUE);
-  if ($stream_uid = opentok_get_connection_uid($variables['stream']['connection']['connectionId'])) {
-    $stream_user = user_load($stream_uid);
-    $output .= theme('username', array('account' => $stream_user));
-  }
+  $output = '<div class="opentok-stream-wrapper">';
+  $output .= '<div class="opentok-stream-controls">';
   $output .= theme('opentok_mute', $variables);
   $output .= theme('opentok_unmute', $variables);
-  $output .= theme('opentok_close', $variables);
+  $output .= theme('opentok_snapshot_stream', $variables);
   if ($variables['session']['capabilities']['forceDisconnect']) {
     $output .= theme('opentok_force_unpublish', $variables);
   }
   if ($variables['session']['capabilities']['forceUnpublish']) {
     $output .= theme('opentok_force_disconnect', $variables);
   }
+  $output .= theme('opentok_close', $variables);
+  $output .= '</div>';
+  if ($stream_uid = opentok_get_connection_uid($variables['stream']['connection']['connectionId'])) {
+    $stream_user = user_load($stream_uid);
+    $output .= '<div class="opentok-username">' . theme('username', array('account' => $stream_user)) . "</div>";
+  }
+  $output .= '<div class="opentok-stream">';
   $output .= '</div>';
   return $output;
 }
@@ -507,6 +579,10 @@ function theme_opentok_unmute($variables) {
 
 function theme_opentok_close($variables) {
   return l(t('Close'), '', array('attributes' => array('class' => 'opentok-close')));
+}
+
+function theme_opentok_snapshot_stream($variables) {
+  return l(t('Snapshot'), '', array('attributes' => array('class' => 'opentok-snapshot-stream')));
 }
 
 function theme_opentok_force_unpublish($variables) {
@@ -545,4 +621,16 @@ function theme_opentok_unpublish($element) {
     'pre_render' => array('drupal_pre_render_link'),
   );*/
   return l(t('Unpublish'), '', array('attributes' => array('class' => 'opentok-unpublish')));
+}
+
+function theme_opentok_push_talk_mode($element) {
+  return l(t('Push To Talk'), '', array('attributes' => array('class' => 'opentok-push-talk-mode')));
+}
+
+function theme_opentok_push_talk_toggle($element) {
+  return l(t('Talk'), '', array('attributes' => array('class' => 'opentok-push-talk-toggle')));
+}
+
+function theme_opentok_snapshot_publisher($element) {
+  return l(t('Snapshot'), '', array('attributes' => array('class' => 'opentok-snapshot-publisher')));
 }

@@ -1,0 +1,27 @@
+.opentok-username{
+  float: none;
+  position: absolute;
+  bottom: 0px;
+  padding-left: 3px;
+  color: lightGray;
+  text-shadow: 1px 1px black;
+  font-weight: bold;
+
+}
+
+.opentok-username a:link,
+.opentok-username a:visited{
+  color: lightGray;
+  text-shadow: 1px 1px black;
+  font-weight: bold;
+}
+
+.opentok-username a:hover{
+  color: white;
+  text-decoration: none;
+}
+
+a.opentok-snapshot-publisher,
+a.opentok-snapshot-stream{
+  background-image: url(images/camera.png);
+}
