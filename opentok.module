@@ -178,7 +178,7 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
       '#type' => 'value',
       '#default_value' => isset($items[$delta]['session_id']) ? $items[$delta]['session_id'] : NULL,
     );
-  	if(isset($items[$delta]['session_id'])){
+    if(isset($items[$delta]['session_id'])){
       $element['regenerate_session'] = array(
         '#type' => 'checkbox',
         '#title' => t('Regenerate OpenTok session'),
@@ -186,7 +186,7 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
       ) + $base;
     } 
     $element['auto_connect'] = array(
-  		'#type' => 'checkbox',
+      '#type' => 'checkbox',
       '#default_value' => isset($items[$delta]['auto_connect']) ? $items[$delta]['auto_connect'] : FALSE,
       '#title' => t('Auto-connect to OpenTok session'),
     );
@@ -219,8 +219,8 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
       );
     }
     $element['#tree'] = TRUE;
-  	$element['#type'] = 'fieldset';
-  	$element = $element + $base;
+    $element['#type'] = 'fieldset';
+    $element = $element + $base;
   }
   return $element;
 }
@@ -282,16 +282,16 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
         }
       }
       if (!empty($element)) {
-        $jquery_resize_path = libraries_get_path('jquery-resize');
-        $jquery_opentok_path = libraries_get_path('jquery-opentok');
-        $json_js_path = libraries_get_path('json-js');
         $opentok_path = drupal_get_path('module', 'opentok');
+        $jquery_resize_path = libraries_get_path('jquery.resize');
+        $jquery_opentok_path = libraries_get_path('jquery.opentok');
+        $json_js_path = libraries_get_path('json-js');
         $element['#attached'] = array(
           'js' => array(
-            $jquery_resize_path . '/jquery.ba-resize.js',
+            
             $jquery_opentok_path . '/jquery.opentok.js',
-      	    $jquery_opentok_path . '/jquery.opentok.layout.js',
-      			$json_js_path . '/json2.js',
+            $jquery_opentok_path . '/jquery.opentok.layout.js',
+            $json_js_path . '/json2.js',
             $opentok_path . '/opentok.js',
           ),
           'css' => array(
@@ -300,7 +300,10 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
             $opentok_path . '/opentok.css',
           ),
         );
-
+        
+        if(file_exists($jquery_resize_path . '/jquery.ba-resize.js')){
+          array_unshift($element['#attached']['js'], $jquery_resize_path . '/jquery.ba-resize.js');
+        }
       }
     break;
   }
@@ -525,8 +528,8 @@ function opentok_theme($existing, $type, $theme, $path) {
 
 function theme_opentok_container($element) {
   global $user;
-	$output = "<div id='{$element['id']}' class='opentok-container'><div class='opentok-controls'>";
-	$output .= theme('opentok_connect', $element);
+  $output = "<div id='{$element['id']}' class='opentok-container'><div class='opentok-controls'>";
+  $output .= theme('opentok_connect', $element);
   $output .= theme('opentok_disconnect', $element);
   $output .= theme('opentok_publish', $element);
   $output .= '</div><div class="opentok-streams clear-block"><div class="opentok-publisher-wrapper">';
