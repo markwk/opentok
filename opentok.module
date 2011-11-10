@@ -118,7 +118,15 @@ function opentok_field_schema($field) {
         'type' => 'varchar',
         'length' => 128,
       ),
-      'auto_connect' => array(
+/*
+      'show_opentok' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+*/ 
+     'auto_connect' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -179,12 +187,22 @@ function opentok_field_widget_form(&$form, &$form_state, $field, $instance, $lan
       '#default_value' => isset($items[$delta]['session_id']) ? $items[$delta]['session_id'] : NULL,
     );
     if(isset($items[$delta]['session_id'])){
+/*
+      $element['show_opentok'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Show OpenTok on this Node.'),
+        '#default_value' => isset($items[$delta]['show_opentok']) ? $items[$delta]['show_opentok'] : FALSE,
+      ) + $base;
+//      );
+    }
+*/
       $element['regenerate_session'] = array(
         '#type' => 'checkbox',
         '#title' => t('Regenerate OpenTok session'),
         '#default_value' => $instance['settings']['regenerate_session'],
       ) + $base;
-    } 
+//      );
+    }
     $element['auto_connect'] = array(
       '#type' => 'checkbox',
       '#default_value' => isset($items[$delta]['auto_connect']) ? $items[$delta]['auto_connect'] : FALSE,
@@ -293,6 +311,7 @@ function opentok_field_formatter_view($obj_type, $object, $field, $instance, $la
             $jquery_opentok_path . '/jquery.opentok.layout.js',
             $json_js_path . '/json2.js',
             $opentok_path . '/opentok.js',
+            $opentok_path . '/opentok-show.js',
           ),
           'css' => array(
             $jquery_opentok_path . '/jquery.opentok.css',
@@ -528,7 +547,8 @@ function opentok_theme($existing, $type, $theme, $path) {
 
 function theme_opentok_container($element) {
   global $user;
-  $output = "<div id='{$element['id']}' class='opentok-container'><div class='opentok-controls'>";
+  $output  = "<div id='opentok-full'>"; 
+  $output .= "<div id='{$element['id']}' class='opentok-container'><div class='opentok-controls'>";
   $output .= theme('opentok_connect', $element);
   $output .= theme('opentok_disconnect', $element);
   $output .= theme('opentok_publish', $element);
@@ -539,7 +559,9 @@ function theme_opentok_container($element) {
   $output .= theme('opentok_push_talk_toggle', $element);
   $output .= theme('opentok_snapshot_publisher', $element);
   $output .= theme('opentok_unpublish', $element);
-  $output .= '</div><div class="opentok-publisher"></div></div></div></div>';
+  $output .= '</div><div class="opentok-publisher"></div></div></div></div></div>';
+  $output .= '<button value="Hide" id="hide_opentok_button">Hide Video Chat</button>';
+  $output .= '<button value="Show" id="show_opentok_button">Show Video Chat</button>';
   return $output;
 }
 
